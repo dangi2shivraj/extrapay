@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ExtraPay - Secure Login & Registration</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet">
+    <!-- Firebase Compat SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="database.js"></script>
+</head>
+<body>
+
+    <div class="auth-container">
+        <!-- Logo and Brand -->
+        <div class="auth-header">
+            <div class="logo-container" style="justify-content: center; margin-bottom: 8px;">
+                <div class="logo-icon" style="background: var(--color-primary); color: white;">E</div>
+                <div class="logo-text" style="font-size: 28px; color: var(--color-primary);">Extra Pay</div>
+            </div>
+            <p style="color: var(--text-muted); font-size: 14px; font-weight: 600;">Secure Task-Based Arbitrage Network</p>
+        </div>
+
+        <!-- Auth Mode Toggle Tabs -->
+        <div class="glass-panel" style="display: flex; margin-bottom: 24px; padding: 4px; border-radius: 12px; background: var(--bg-input);">
+            <button id="tab-login" class="btn btn-secondary" style="flex: 1; border: none; box-shadow: none; background: var(--color-primary); color: white; border-radius: 8px;" onclick="switchTab('login')">Sign In</button>
+            <button id="tab-register" class="btn btn-secondary" style="flex: 1; border: none; box-shadow: none; background: transparent; color: var(--text-main); border-radius: 8px;" onclick="switchTab('register')">Register</button>
+        </div>
+
+        <!-- Credentials Form Card -->
+        <div class="glass-panel auth-card glowing-border">
+            <form id="auth-form" onsubmit="handleAuthSubmit(event)">
+                <!-- Sign Up Name Field -->
+                <div id="group-name" class="form-group" style="display: none;">
+                    <label class="form-label" for="user-name">Full Name</label>
+                    <div class="form-input-container">
+                        <input class="form-input" type="text" id="user-name" placeholder="Enter your full name" minlength="3">
+                    </div>
+                </div>
+
+                <!-- Email Field -->
+                <div class="form-group">
+                    <label class="form-label" for="user-email">Email Address</label>
+                    <div class="form-input-container">
+                        <input class="form-input" type="email" id="user-email" placeholder="name@domain.com" required>
+                    </div>
+                </div>
+
+                <!-- Password Field -->
+                <div class="form-group">
+                    <label class="form-label" for="user-password">Password</label>
+                    <div class="form-input-container">
+                        <input class="form-input" type="password" id="user-password" placeholder="••••••••" required minlength="6">
+                    </div>
+                </div>
+
+                <!-- Sign Up Referral Code Field -->
+                <div id="group-referrer" class="form-group" style="display: none;">
+                    <label class="form-label" for="user-referrer">Referral Sponsor ID (Optional)</label>
+                    <div class="form-input-container">
+                        <input class="form-input" type="text" id="user-referrer" placeholder="EP_XXXXXX">
+                    </div>
+                </div>
+
+                <!-- Submit Button -->
+                <button type="submit" id="btn-submit" class="btn" style="margin-top: 10px;">
+                    <span class="material-symbols-outlined">login</span>
+                    <span id="submit-text">Access Wallet</span>
+                </button>
+            </form>
+        </div>
+
+        <!-- Marketing Promotion Features -->
+        <div class="glass-panel" style="padding: 16px; margin-bottom: 20px; display: flex; flex-direction: column; gap: 12px; background: rgba(41,121,255,0.04); border-color: rgba(41,121,255,0.1);">
+            <div style="display: flex; gap: 12px; align-items: center;">
+                <div style="background: rgba(0, 230, 118, 0.15); color: var(--color-success); width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                    <span class="material-symbols-outlined">wallet_giftcard</span>
+                </div>
+                <div>
+                    <h4 style="font-size: 14px; font-weight: 700; color: #1F2937;">₹180 Signup Reward</h4>
+                    <p style="font-size: 12px; color: var(--text-muted);">Receive ₹180 sign up bonus immediately inside your wallet.</p>
+                </div>
+            </div>
+            <div style="display: flex; gap: 12px; align-items: center; border-top: 1px solid var(--border-color); padding-top: 12px;">
+                <div style="background: rgba(41, 121, 255, 0.15); color: var(--color-primary); width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                    <span class="material-symbols-outlined">diversity_3</span>
+                </div>
+                <div>
+                    <h4 style="font-size: 14px; font-weight: 700; color: #1F2937;">3-Level Commissions</h4>
+                    <p style="font-size: 12px; color: var(--text-muted);">Earn residual task payouts of 2% (L1), 1% (L2), and 0.5% (L3).</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="auth-footer">
+            <p id="auth-footer-prompt">Don't have an account? <a href="#" class="auth-link" onclick="switchTab('register')">Register Here</a></p>
+        </div>
+    </div>
+
+    <!-- Toast Notification Overlay -->
+    <div id="toast" class="toast">
+        <span id="toast-text" class="toast-message">Message</span>
+        <span class="material-symbols-outlined" style="font-size: 18px; color: var(--text-muted); cursor: pointer;" onclick="hideToast()">close</span>
+    </div>
+
+    <!-- Firebase Integration Configuration Layer (Optional Live Mode Toggle) -->
+    <div style="text-align: center; margin-top: 20px; padding: 0 20px; padding-bottom: 40px;">
+        <button class="btn btn-secondary" style="font-size: 12px; padding: 8px 16px; width: auto; display: inline-flex;" onclick="toggleFirebaseConfig()">
+            <span class="material-symbols-outlined" style="font-size: 16px;">settings_suggest</span>
+            Configure Google Firebase
+        </button>
+    </div>
+
+    <!-- Firebase Config Dialog -->
+    <div id="firebase-overlay" class="overlay" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Firebase Config</h3>
+                <button class="btn-close" onclick="toggleFirebaseConfig()">×</button>
+            </div>
+            <p style="font-size: 12px; margin-bottom: 16px;">To link ExtraPay to your live Google Firebase instance, enter your credentials below. Leave empty to use simulated secure storage.</p>
+            <div class="form-group">
+                <label class="form-label">API Key</label>
+                <input class="form-input" type="text" id="fb-api-key" placeholder="AIzaSy...">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Project ID</label>
+                <input class="form-input" type="text" id="fb-project-id" placeholder="extrapay-app">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Auth Domain</label>
+                <input class="form-input" type="text" id="fb-auth-domain" placeholder="extrapay-app.firebaseapp.com">
+            </div>
+            <button class="btn" onclick="saveFirebaseConfig()">Save & Apply</button>
+        </div>
+    </div>
+
+    <!-- Import Firebase Modular SDK elements statically for developers -->
+    <script type="module">
+        // Real developers can use importmap or direct URL imports for static module execution
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { getAuth } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+        import { getFirestore } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+        // This exposes firebase module references to our standard JS layers if configuration is entered.
+        window.firebaseImports = { initializeApp, getAuth, getFirestore };
+    </script>
+
+    <script>
+        let currentMode = 'login';
+
+        function showToast(message, isSuccess = true) {
+            const toast = document.getElementById('toast');
+            const text = document.getElementById('toast-text');
+            text.innerText = message;
+            toast.style.borderLeftColor = isSuccess ? 'var(--color-success)' : 'var(--color-danger)';
+            toast.classList.add('show');
+            setTimeout(() => {
+                hideToast();
+            }, 3500);
+        }
+
+        function hideToast() {
+            document.getElementById('toast').classList.remove('show');
+        }
+
+        function switchTab(mode) {
+            currentMode = mode;
+            const tabLogin = document.getElementById('tab-login');
+            const tabRegister = document.getElementById('tab-register');
+            const groupName = document.getElementById('group-name');
+            const groupReferrer = document.getElementById('group-referrer');
+            const submitText = document.getElementById('submit-text');
+            const footerPrompt = document.getElementById('auth-footer-prompt');
+            const submitIcon = document.querySelector('#btn-submit .material-symbols-outlined');
+
+            if (mode === 'login') {
+                tabLogin.style.background = 'var(--color-primary)';
+                tabRegister.style.background = 'transparent';
+                groupName.style.display = 'none';
+                groupReferrer.style.display = 'none';
+                submitText.innerText = 'Access Wallet';
+                submitIcon.innerText = 'login';
+                footerPrompt.innerHTML = `Don't have an account? <a href="#" class="auth-link" onclick="switchTab('register')">Register Here</a>`;
+                document.getElementById('user-name').removeAttribute('required');
+            } else {
+                tabLogin.style.background = 'transparent';
+                tabRegister.style.background = 'var(--color-primary)';
+                groupName.style.display = 'block';
+                groupReferrer.style.display = 'block';
+                submitText.innerText = 'Create Account';
+                submitIcon.innerText = 'person_add';
+                footerPrompt.innerHTML = `Already have an account? <a href="#" class="auth-link" onclick="switchTab('login')">Sign In Here</a>`;
+                document.getElementById('user-name').setAttribute('required', 'true');
+            }
+        }
+
+        async function handleAuthSubmit(event) {
+            event.preventDefault();
+            const email = document.getElementById('user-email').value.trim();
+            const pass = document.getElementById('user-password').value;
+            
+            if (!email || !pass) {
+                showToast('Please fill out all fields.', false);
+                return;
+            }
+
+            const btnSubmit = document.getElementById('btn-submit');
+            const origHTML = btnSubmit.innerHTML;
+            btnSubmit.disabled = true;
+            btnSubmit.innerHTML = `<span class="material-symbols-outlined" style="animation: spin 1s linear infinite;">sync</span> Processing...`;
+
+            try {
+                if (currentMode === 'login') {
+                    // Try to authenticate via Firebase
+                    const user = await window.epDb.login(email, pass);
+                    showToast(`Welcome back, ${user.name}! Accessing dashboard...`, true);
+                    
+                    setTimeout(() => {
+                        window.location.href = 'index.html';
+                    }, 1000);
+                } else {
+                    const name = document.getElementById('user-name').value.trim();
+                    const refCode = document.getElementById('user-referrer').value;
+                    
+                    const user = await window.epDb.register(name, email, pass, refCode);
+                    showToast(`Registration Successful! ₹180 signup reward credited!`, true);
+                    
+                    // Auto login
+                    window.epDb.setCurrentUser(email);
+                    
+                    setTimeout(() => {
+                        window.location.href = 'index.html';
+                    }, 1500);
+                }
+            } catch (error) {
+                btnSubmit.disabled = false;
+                btnSubmit.innerHTML = origHTML;
+                showToast(error.message, false);
+            }
+        }
+
+        function toggleFirebaseConfig() {
+            const overlay = document.getElementById('firebase-overlay');
+            overlay.style.display = overlay.style.display === 'none' ? 'flex' : 'none';
+            
+            // Populate fields if config exists
+            if (overlay.style.display === 'flex') {
+                const config = JSON.parse(localStorage.getItem('ep_firebase_config') || '{}');
+                document.getElementById('fb-api-key').value = config.apiKey || '';
+                document.getElementById('fb-project-id').value = config.projectId || '';
+                document.getElementById('fb-auth-domain').value = config.authDomain || '';
+            }
+        }
+
+        function saveFirebaseConfig() {
+            const apiKey = document.getElementById('fb-api-key').value.trim();
+            const projectId = document.getElementById('fb-project-id').value.trim();
+            const authDomain = document.getElementById('fb-auth-domain').value.trim();
+
+            if (!apiKey || !projectId || !authDomain) {
+                // If any is empty, remove live config
+                localStorage.removeItem('ep_firebase_config');
+                showToast('Firebase config removed. Running in secure local storage fallback mode.', true);
+            } else {
+                const config = { apiKey, projectId, authDomain };
+                localStorage.setItem('ep_firebase_config', JSON.stringify(config));
+                showToast('Firebase configuration saved successfully! System will attempt to connect.', true);
+            }
+            toggleFirebaseConfig();
+        }
+
+        // Check if already logged in
+        window.addEventListener('load', () => {
+            const currentUser = window.epDb.getCurrentUser();
+            if (currentUser) {
+                window.location.href = 'index.html';
+                return;
+            }
+
+            // Auto fill referral code from URL query string if present
+            const urlParams = new URLSearchParams(window.location.search);
+            const refParam = urlParams.get('ref');
+            if (refParam) {
+                switchTab('register');
+                document.getElementById('user-referrer').value = refParam;
+                showToast(`Referral code ${refParam} automatically applied!`, true);
+            }
+        });
+    </script>
+</body>
+</html>

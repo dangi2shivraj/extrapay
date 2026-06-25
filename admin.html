@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ExtraPay - Secure Admin Ledger Console</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet">
+    <!-- Firebase Compat SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="database.js"></script>
+</head>
+<body>
+
+    <!-- Header -->
+    <header class="app-header" style="border-bottom-color: var(--color-primary-glow);">
+        <div class="logo-container">
+            <div class="logo-icon" style="background: var(--color-primary);">A</div>
+            <div>
+                <div class="logo-text">Ledger Admin</div>
+                <div style="font-size: 8px; color: var(--text-muted); font-weight: bold; letter-spacing: 1.5px; text-transform: uppercase;">Control Console</div>
+            </div>
+        </div>
+        <div>
+            <button class="user-badge" style="background: var(--bg-input); color: var(--color-secondary); cursor: pointer;" onclick="goToUserDashboard()">
+                <span class="material-symbols-outlined" style="font-size: 16px; margin-right: 4px;">arrow_back</span>
+                Dashboard
+            </button>
+        </div>
+    </header>
+
+    <main class="main-content">
+        <!-- HEADER OVERVIEW STATS -->
+        <div class="admin-stats-grid">
+            <div class="admin-stat-card">
+                <p style="font-size: 11px; color: var(--text-muted);">Total User Accounts</p>
+                <div class="admin-stat-num" id="stat-total-users">0</div>
+            </div>
+            <div class="admin-stat-card">
+                <p style="font-size: 11px; color: var(--color-warning);">Pending UTR Deposits</p>
+                <div class="admin-stat-num" id="stat-pending-deposits" style="color: var(--color-warning);">0</div>
+            </div>
+            <div class="admin-stat-card">
+                <p style="font-size: 11px; color: var(--color-secondary);">Pending USDT Sales</p>
+                <div class="admin-stat-num" id="stat-pending-usdt" style="color: var(--color-secondary);">0</div>
+            </div>
+            <div class="admin-stat-card">
+                <p style="font-size: 11px; color: var(--color-danger);">Pending UPI Cashouts</p>
+                <div class="admin-stat-num" id="stat-pending-withdrawals" style="color: var(--color-danger);">0</div>
+            </div>
+        </div>
+
+        <!-- SETTINGS UPDATE MODULE -->
+        <div class="glass-panel" style="padding: 20px; border-color: rgba(255,215,0,0.25);">
+            <h3 style="font-size: 16px; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; color: #ffffff;">
+                <span class="material-symbols-outlined" style="color: var(--color-primary);">tune</span>
+                App & Rates Settings
+            </h3>
+            <div class="form-group">
+                <label class="form-label">Global Payment UPI ID</label>
+                <input type="text" id="admin-upi-input" class="form-input" placeholder="e.g. ram-5784@ptyes">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Global Binance BSC BEP20 Wallet Address</label>
+                <input type="text" id="admin-usdt-address-input" class="form-input" placeholder="e.g. 0x...">
+            </div>
+            <div class="form-group">
+                <label class="form-label">USDT Arbitrage Buying Rate (₹ per 1 USDT)</label>
+                <input type="number" id="admin-usdt-rate-input" class="form-input" placeholder="e.g. 112">
+            </div>
+            <button class="btn" style="width: 100%;" onclick="updateAppSettings()">
+                <span class="material-symbols-outlined">save</span>
+                Save Configurations
+            </button>
+        </div>
+
+        <!-- PENDING UPI DEPOSIT REQUESTS -->
+        <div>
+            <div class="section-title">
+                <span>Pending UPI Deposit Receipts</span>
+                <span id="badge-deposits-count" class="badge-locked" style="background: rgba(255,179,0,0.15); color: var(--color-warning);">0 Pending</span>
+            </div>
+            <div class="level-list" id="pending-deposits-container">
+                <!-- Loaded Dynamically -->
+            </div>
+        </div>
+
+        <!-- PENDING USDT SELL REQUESTS -->
+        <div>
+            <div class="section-title">
+                <span>Pending USDT Selling TxIDs</span>
+                <span id="badge-usdt-count" class="badge-locked" style="background: rgba(0, 245, 255, 0.15); color: var(--color-secondary);">0 Pending</span>
+            </div>
+            <div class="level-list" id="pending-usdt-container">
+                <!-- Loaded Dynamically -->
+            </div>
+        </div>
+
+        <!-- PENDING UPI WITHDRAWAL PAYOUTS -->
+        <div>
+            <div class="section-title">
+                <span>Pending Cashout Withdrawals</span>
+                <span id="badge-withdraw-count" class="badge-locked" style="background: rgba(255, 23, 68, 0.15); color: var(--color-danger);">0 Pending</span>
+            </div>
+            <div class="level-list" id="pending-withdrawals-container">
+                <!-- Loaded Dynamically -->
+            </div>
+        </div>
+
+        <!-- FULL SYSTEM TRANSACTION AUDIT TRAILS -->
+        <div>
+            <h4 class="section-title">Full Ledger Audit Trail</h4>
+            <div class="tx-list" id="global-audit-trail-container" style="max-height: 450px;">
+                <!-- Displays all transactions -->
+            </div>
+        </div>
+    </main>
+
+    <!-- Toast Notification Overlay -->
+    <div id="toast" class="toast">
+        <span id="toast-text" class="toast-message">Message</span>
+        <span class="material-symbols-outlined" style="font-size: 18px; color: var(--text-muted); cursor: pointer;" onclick="hideToast()">close</span>
+    </div>
+
+    <script>
+        let loggedUser = null;
+
+        function showToast(message, isSuccess = true) {
+            const toast = document.getElementById('toast');
+            const text = document.getElementById('toast-text');
+            text.innerText = message;
+            toast.style.borderLeftColor = isSuccess ? 'var(--color-success)' : 'var(--color-danger)';
+            toast.classList.add('show');
+            setTimeout(() => {
+                hideToast();
+            }, 3500);
+        }
+
+        function hideToast() {
+            document.getElementById('toast').classList.remove('show');
+        }
+
+        function goToUserDashboard() {
+            window.location.href = 'index.html';
+        }
+
+        function verifyAdminSession() {
+            loggedUser = window.epDb.getCurrentUser();
+            if (!loggedUser) {
+                window.location.href = 'login.html';
+                return;
+            }
+            if (!loggedUser.isAdmin) {
+                alert("Unauthorized Access. Admin credentials are required.");
+                window.location.href = 'index.html';
+                return;
+            }
+
+            // Populate system settings in inputs
+            const settings = window.epDb.getSettings();
+            document.getElementById('admin-upi-input').value = settings.upiId || 'ram-5784@ptyes';
+            document.getElementById('admin-usdt-rate-input').value = settings.usdtRate || 112;
+            document.getElementById('admin-usdt-address-input').value = settings.usdtAddress || '0x71e7edd284200a067b8e549af6f397e0396796e2';
+
+            renderAdminStats();
+        }
+
+        function updateAppSettings() {
+            const upi = document.getElementById('admin-upi-input').value.trim();
+            const rate = document.getElementById('admin-usdt-rate-input').value.trim();
+            const address = document.getElementById('admin-usdt-address-input').value.trim();
+
+            if (!upi || !rate || !address) {
+                showToast('Please fill out all settings fields completely.', false);
+                return;
+            }
+
+            window.epDb.updateSettings(upi, rate, address);
+            showToast('Settings successfully updated! Refreshing live views...', true);
+            renderAdminStats();
+        }
+
+        function renderAdminStats() {
+            const users = window.epDb.getUsers();
+            const txs = window.epDb.getTransactions();
+
+            // Calculate metrics
+            const totalUsers = Object.keys(users).length;
+            
+            // Filter supporting both legacy and updated casings/types
+            const pendingDeps = txs.filter(t => (t.type === 'deposit' || t.type === 'INR_DEPOSIT') && (t.status === 'pending' || t.status === 'PENDING'));
+            const pendingUsdt = txs.filter(t => (t.type === 'usdt_sell' || t.type === 'USDT_SELL') && (t.status === 'pending' || t.status === 'PENDING'));
+            const pendingWiths = txs.filter(t => (t.type === 'withdrawal' || t.type === 'WITHDRAWAL') && (t.status === 'pending' || t.status === 'PENDING'));
+
+            // Set counters
+            document.getElementById('stat-total-users').innerText = totalUsers;
+            document.getElementById('stat-pending-deposits').innerText = pendingDeps.length;
+            document.getElementById('stat-pending-usdt').innerText = pendingUsdt.length;
+            document.getElementById('stat-pending-withdrawals').innerText = pendingWiths.length;
+
+            document.getElementById('badge-deposits-count').innerText = `${pendingDeps.length} Pending`;
+            document.getElementById('badge-usdt-count').innerText = `${pendingUsdt.length} Pending`;
+            document.getElementById('badge-withdraw-count').innerText = `${pendingWiths.length} Pending`;
+
+            // Populate lists
+            populatePendingDeposits(pendingDeps);
+            populatePendingUsdt(pendingUsdt);
+            populatePendingWithdrawals(pendingWiths);
+            populateGlobalAudits(txs);
+        }
+
+        function populatePendingDeposits(list) {
+            const container = document.getElementById('pending-deposits-container');
+            container.innerHTML = '';
+
+            if (list.length === 0) {
+                container.innerHTML = `<div style="text-align: center; padding: 20px; font-size: 12px; color: var(--text-muted);">No pending deposit receipts.</div>`;
+                return;
+            }
+
+            list.forEach(tx => {
+                const dateStr = new Date(tx.timestamp).toLocaleString();
+                const utrCode = tx.utr_or_txid || 'N/A';
+                const id = tx.tx_id || tx.id;
+                const amt = tx.amount_inr || tx.amount || 0;
+
+                container.innerHTML += `
+                    <div class="glass-panel admin-card level-card" style="border-left-color: var(--color-warning);">
+                        <div class="level-info">
+                            <span class="level-title" style="font-size: 15px;">₹${parseFloat(amt).toFixed(2)} Deposit / Task Payment</span>
+                            <span class="level-meta">User: <b>${tx.userName}</b> (UID: ${tx.uid})</span>
+                            <span class="level-meta" style="color: var(--color-warning); font-family: monospace; font-size: 12px; font-weight: bold;">UTR Code: ${utrCode}</span>
+                            <span class="level-meta" style="font-size: 10px;">Submitted: ${dateStr}</span>
+                            ${tx.proof_image_url ? `<a href="${tx.proof_image_url}" target="_blank" style="font-size: 11px; color: var(--color-secondary); text-decoration: underline; margin-top: 4px; display: inline-block;">View Screenshot Receipt</a>` : ''}
+                        </div>
+                        <div class="admin-actions">
+                            <button class="btn" style="background: var(--color-success); border-color: var(--color-success); font-weight: bold;" onclick="processTx('${id}', 'approve')">Approve & Credit</button>
+                            <button class="btn btn-secondary" style="color: var(--color-danger); border-color: var(--color-danger);" onclick="processTx('${id}', 'reject')">Reject</button>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function populatePendingUsdt(list) {
+            const container = document.getElementById('pending-usdt-container');
+            container.innerHTML = '';
+
+            if (list.length === 0) {
+                container.innerHTML = `<div style="text-align: center; padding: 20px; font-size: 12px; color: var(--text-muted);">No pending USDT arbitrage submissions.</div>`;
+                return;
+            }
+
+            list.forEach(tx => {
+                const dateStr = new Date(tx.timestamp).toLocaleString();
+                const hashTxID = tx.utr_or_txid || 'N/A';
+                const id = tx.tx_id || tx.id;
+                const amtINR = tx.amount_inr || tx.amount || 0;
+                const amtUSDT = tx.amount_usdt || (amtINR / 112);
+
+                container.innerHTML += `
+                    <div class="glass-panel admin-card level-card" style="border-left-color: var(--color-secondary);">
+                        <div class="level-info">
+                            <span class="level-title" style="font-size: 15px;">USDT Arbitrage Sell: ₹${parseFloat(amtINR).toFixed(2)}</span>
+                            <span class="level-meta">User: <b>${tx.userName}</b> (UID: ${tx.uid})</span>
+                            <span class="level-meta">Sell Amount: <b>${parseFloat(amtUSDT).toFixed(2)} USDT</b></span>
+                            <span class="level-meta" style="color: var(--color-secondary); font-family: monospace; font-size: 11px; font-weight: bold;">TxID Hash: ${hashTxID}</span>
+                            <span class="level-meta" style="font-size: 10px;">Submitted: ${dateStr}</span>
+                            ${tx.proof_image_url ? `<a href="${tx.proof_image_url}" target="_blank" style="font-size: 11px; color: var(--color-secondary); text-decoration: underline; margin-top: 4px; display: inline-block;">View Transaction Screenshot</a>` : ''}
+                        </div>
+                        <div class="admin-actions">
+                            <button class="btn" style="background: var(--color-success); border-color: var(--color-success); font-weight: bold;" onclick="processTx('${id}', 'approve')">Approve & Credit</button>
+                            <button class="btn btn-secondary" style="color: var(--color-danger); border-color: var(--color-danger);" onclick="processTx('${id}', 'reject')">Reject</button>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function populatePendingWithdrawals(list) {
+            const container = document.getElementById('pending-withdrawals-container');
+            container.innerHTML = '';
+
+            if (list.length === 0) {
+                container.innerHTML = `<div style="text-align: center; padding: 20px; font-size: 12px; color: var(--text-muted);">No pending withdrawal requests.</div>`;
+                return;
+            }
+
+            list.forEach(tx => {
+                const dateStr = new Date(tx.timestamp).toLocaleString();
+                const destUPI = tx.utr_or_txid || 'N/A';
+                const id = tx.tx_id || tx.id;
+                const amt = Math.abs(tx.amount_inr || tx.amount || 0);
+
+                container.innerHTML += `
+                    <div class="glass-panel admin-card level-card" style="border-left-color: var(--color-danger);">
+                        <div class="level-info">
+                            <span class="level-title" style="font-size: 15px; color: var(--color-danger);">₹${parseFloat(amt).toFixed(2)} UPI Withdrawal Payout</span>
+                            <span class="level-meta">User: <b>${tx.userName}</b> (UID: ${tx.uid})</span>
+                            <span class="level-meta" style="color: var(--text-main); font-family: monospace; font-size: 12px; font-weight: bold;">UPI Account ID: ${destUPI}</span>
+                            <span class="level-meta" style="font-size: 10px;">Requested: ${dateStr}</span>
+                        </div>
+                        <div class="admin-actions">
+                            <button class="btn" style="background: var(--color-success); border-color: var(--color-success); font-weight: bold;" onclick="processTx('${id}', 'approve')">Success (Paid Out)</button>
+                            <button class="btn btn-secondary" style="color: var(--color-danger); border-color: var(--color-danger);" onclick="processTx('${id}', 'reject')">Reject & Refund</button>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function populateGlobalAudits(list) {
+            const container = document.getElementById('global-audit-trail-container');
+            container.innerHTML = '';
+
+            if (list.length === 0) {
+                container.innerHTML = `<div style="text-align: center; padding: 20px; font-size: 12px; color: var(--text-muted);">Global ledger empty.</div>`;
+                return;
+            }
+
+            list.forEach(tx => {
+                const dateStr = new Date(tx.timestamp).toLocaleString();
+                const amtVal = tx.amount_inr || tx.amount || 0;
+                const sign = amtVal >= 0 ? '+' : '';
+                const colorClass = amtVal >= 0 ? 'amount-add' : 'amount-sub';
+                
+                let statusClass = 'status-pending';
+                if (tx.status === 'approved' || tx.status === 'APPROVED') statusClass = 'status-approved';
+                if (tx.status === 'rejected' || tx.status === 'REJECTED') statusClass = 'status-rejected';
+
+                const id = tx.tx_id || tx.id;
+
+                container.innerHTML += `
+                    <div class="tx-item" style="background: rgba(255,255,255,0.01);">
+                        <div class="tx-info">
+                            <span class="tx-title"><b>${tx.userName} (UID: ${tx.uid})</b> - ${tx.details}</span>
+                            <span class="tx-date">${dateStr} | Ledger Ref: ${id} | Event: <span style="color: var(--color-secondary); font-weight: bold;">${tx.type.toUpperCase()}</span></span>
+                        </div>
+                        <div style="text-align: right; display: flex; flex-direction: column; gap: 4px; align-items: flex-end;">
+                            <span class="tx-amount ${colorClass}">${sign}₹${Math.abs(amtVal).toFixed(2)}</span>
+                            <span class="tx-status ${statusClass}">${tx.status.toUpperCase()}</span>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function processTx(txId, action) {
+            try {
+                if (action === 'approve') {
+                    window.epDb.approveTransaction(txId);
+                    showToast('Transaction verified and ledger state updated!', true);
+                } else {
+                    window.epDb.rejectTransaction(txId);
+                    showToast('Transaction cancelled and refunded where applicable.', true);
+                }
+                renderAdminStats();
+            } catch (e) {
+                showToast(e.message, false);
+            }
+        }
+
+        window.addEventListener('load', () => {
+            verifyAdminSession();
+        });
+    </script>
+</body>
+</html>

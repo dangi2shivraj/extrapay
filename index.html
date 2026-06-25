@@ -1,0 +1,1239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Extra Pay - Task & USDT Arbitrage Platform</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet">
+    <!-- Firebase Compat SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="database.js"></script>
+    <style>
+        /* Specific tweaks to enforce absolute precision matching the screenshots */
+        .vip-pills-container {
+            padding: 10px 0;
+            background: #FFFFFF;
+            position: sticky;
+            top: 60px;
+            z-index: 10;
+            border-bottom: 1px solid var(--border-color);
+            margin: -16px -16px 12px -16px;
+            padding-left: 16px;
+            padding-right: 16px;
+        }
+        
+        .avatar-circle {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #FFC107 0%, #FF5722 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #FFFFFF;
+            font-size: 24px;
+            font-weight: bold;
+            border: 3px solid #FFFFFF;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Top App Header -->
+    <header class="app-header">
+        <div class="logo-container">
+            <div class="logo-icon" style="background: #FFFFFF; color: var(--color-primary);">E</div>
+            <div>
+                <div class="logo-text">Extra Pay</div>
+                <div style="font-size: 8px; color: rgba(255, 255, 255, 0.8); font-weight: bold; letter-spacing: 1px; text-transform: uppercase;">Official</div>
+            </div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px;">
+            <div class="user-badge" id="header-user">
+                <span class="material-symbols-outlined" style="font-size: 14px;">person</span>
+                <span id="user-display-name">Trader</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="main-content">
+
+        <!-- ================= PANEL 1: HOME ================= -->
+        <div id="panel-dash" class="view-panel active">
+            
+            <!-- Extra Pay Banner (Sleek Gradient Blue Card matching Screenshot 1) -->
+            <div class="movpay-banner">
+                <div class="movpay-logo-big">Extra Pay</div>
+                <div class="movpay-subtext">official</div>
+                <p style="color: rgba(255,255,255,0.9); font-size: 11px; margin-top: 10px; font-weight: 500;">Safe, secure high-yield P2P task matched arbitrage network</p>
+            </div>
+
+            <!-- USDT Top-up Banner Card -->
+            <div class="topup-card">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <span class="material-symbols-outlined" style="font-size: 32px; color: var(--color-secondary);">currency_exchange</span>
+                    <div>
+                        <h4 style="font-size: 14px; font-weight: bold; color: #111827;">USDT Top-up</h4>
+                        <p style="font-size: 11px; color: var(--text-muted);">Safe • Fast • Convenient</p>
+                    </div>
+                </div>
+                <button class="blue-btn" onclick="openUsdtTopUpModal()">Top up ></button>
+            </div>
+
+            <!-- Newcomer Bonus Banner Card -->
+            <div class="newcomer-card">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <span class="material-symbols-outlined" style="font-size: 32px; color: #FF1744;">military_tech</span>
+                    <div>
+                        <h4 style="font-size: 14px; font-weight: bold; color: #111827;">Newcomer Bonus</h4>
+                        <p style="font-size: 11px; color: var(--text-muted);">Up to Rs. 800!</p>
+                    </div>
+                </div>
+                <button class="blue-btn" style="background: #FF1744;" onclick="claimNewbieBonus()">Click to enter</button>
+            </div>
+
+            <!-- Stats Card (Bento-style 4-Grid matching Screenshot 1) -->
+            <div class="stats-container">
+                <div class="stats-grid-4">
+                    <div class="stat-item" style="border-right: 1px solid var(--border-color); border-bottom: 1px solid var(--border-color); padding-bottom: 12px;">
+                        <div class="stat-label-with-icon">
+                            <span class="material-symbols-outlined" style="font-size: 16px; color: var(--color-primary);">shopping_cart</span>
+                            <span>Buy quantity</span>
+                        </div>
+                        <span class="stat-val-big" id="home-buy-quantity">0</span>
+                    </div>
+                    <div class="stat-item" style="border-bottom: 1px solid var(--border-color); padding-bottom: 12px; padding-left: 8px;">
+                        <div class="stat-label-with-icon">
+                            <span class="material-symbols-outlined" style="font-size: 16px; color: var(--color-primary);">payments</span>
+                            <span>Buy Amount</span>
+                        </div>
+                        <span class="stat-val-big" id="home-buy-amount">₹0.00</span>
+                    </div>
+                    <div class="stat-item" style="border-right: 1px solid var(--border-color); padding-top: 8px;">
+                        <div class="stat-label-with-icon">
+                            <span class="material-symbols-outlined" style="font-size: 16px; color: var(--color-secondary);">swap_horiz</span>
+                            <span>Sell today</span>
+                        </div>
+                        <span class="stat-val-big" id="home-sell-today">₹0.00</span>
+                    </div>
+                    <div class="stat-item" style="padding-top: 8px; padding-left: 8px;">
+                        <div class="stat-label-with-icon">
+                            <span class="material-symbols-outlined" style="font-size: 16px; color: var(--color-secondary);">trending_up</span>
+                            <span>Total revenue</span>
+                        </div>
+                        <span class="stat-val-big" style="color: #00E676;" id="home-total-revenue">₹3.00</span>
+                    </div>
+                </div>
+                <div style="border-top: 1px solid var(--border-color); margin-top: 16px; padding-top: 10px; text-align: center;">
+                    <a href="#" style="font-size: 11px; font-weight: bold; color: var(--color-primary); text-decoration: none;" onclick="switchPanel('tasks')">More ></a>
+                </div>
+            </div>
+
+            <!-- Tutorial Section (matching Screenshot 1) -->
+            <div>
+                <h3 style="font-size: 18px; font-weight: bold; margin-bottom: 12px; color: #111827;">Tutorial</h3>
+                <div class="glass-panel" style="padding: 16px; display: flex; justify-content: space-between; align-items: center; background: linear-gradient(135deg, #FFFFFF 70%, rgba(41,121,255,0.03) 100%);">
+                    <div>
+                        <h4 style="font-size: 14px; font-weight: bold; margin-bottom: 4px; color: #111827;">Purchase Introduction</h4>
+                        <div style="display: flex; gap: 8px; margin-top: 10px;">
+                            <button class="outlined-blue-btn" style="padding: 4px 10px; font-size: 10px; display: flex; align-items: center; gap: 4px;" onclick="alert('Playing English video tutorial...')">
+                                <span class="material-symbols-outlined" style="font-size: 12px;">play_arrow</span> watch video
+                            </button>
+                            <button class="outlined-blue-btn" style="padding: 4px 10px; font-size: 10px; display: flex; align-items: center; gap: 4px;" onclick="alert('वीडियो ट्यूटोरियल शुरू हो रहा है...')">
+                                <span class="material-symbols-outlined" style="font-size: 12px;">play_arrow</span> वीडियो देखें
+                            </button>
+                        </div>
+                    </div>
+                    <div style="background: rgba(41, 121, 255, 0.1); width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: var(--color-primary);">
+                        <span class="material-symbols-outlined" style="font-size: 32px;">smart_display</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Log Audits directly on Dash -->
+            <div>
+                <div class="section-title">Global Activity Log</div>
+                <div class="tx-list" id="home-activity-logs">
+                    <!-- Dynamic Log Lists -->
+                </div>
+            </div>
+
+        </div>
+
+        <!-- ================= PANEL 2: BUY RP (TASKS) ================= -->
+        <div id="panel-tasks" class="view-panel">
+            
+            <!-- Standard Task selection view (Screenshot 2) -->
+            <div id="task-grab-screen" style="display: block;">
+                <!-- Sticky/Floating VIP Pill Switcher -->
+                <div class="vip-pills-container">
+                    <div class="vip-tabs-scroll" id="vip-tabs-scroll">
+                        <!-- Dynamic Pills L1 to L7 -->
+                    </div>
+                </div>
+
+                <!-- Sort & Refresh Filter row -->
+                <div class="filter-sort-row" style="margin-bottom: 12px;">
+                    <select class="custom-select" id="sort-select" onchange="renderOrderList()">
+                        <option value="low_high">From low to high</option>
+                        <option value="high_low">From high to low</option>
+                    </select>
+                    <button class="outlined-blue-btn" style="display: flex; align-items: center; gap: 6px; padding: 4px 12px;" onclick="refreshOrders()">
+                        <span class="material-symbols-outlined" style="font-size: 14px;">refresh</span> Refresh
+                    </button>
+                </div>
+
+                <!-- Orders matched list matching Screenshot 2 -->
+                <div style="display: flex; flex-direction: column; gap: 12px;" id="p2p-orders-list">
+                    <!-- Dynamic matching orders rendered via JS -->
+                </div>
+            </div>
+
+            <!-- 10-Minute Gateway countdown overlay screen (when order is matched) -->
+            <div id="gateway-screen" style="display: none;" class="gateway-card">
+                <div style="display: flex; justify-content: space-between; align-items: start; border-bottom: 1px dashed var(--border-color); padding-bottom: 12px; margin-bottom: 16px;">
+                    <div>
+                        <span class="step-badge" style="background: var(--color-primary-glow); color: var(--color-primary);">10-Minute P2P Gateway</span>
+                        <h3 style="font-size: 16px; font-weight: 800; color: #111827;" id="gateway-merchant-title">Order matched: Flipkart</h3>
+                    </div>
+                    <div style="text-align: right;">
+                        <span style="font-size: 9px; color: var(--text-muted); text-transform: uppercase;">Matched Order ID</span>
+                        <p id="gateway-order-id" style="font-family: monospace; font-size: 11px; font-weight: bold; color: var(--color-primary);">ORD_XXXXX</p>
+                    </div>
+                </div>
+
+                <div style="text-align: center; margin-bottom: 20px;">
+                    <p style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; font-weight: bold;">Gateway Expiration Timer</p>
+                    <div class="gateway-timer" id="gateway-clock" style="color: var(--color-primary); font-size: 32px; font-weight: 800; margin: 6px 0;">10:00</div>
+                    <p style="font-size: 10px; color: var(--color-danger); font-weight: bold;">Do not refresh! Transfer matching amount before timeout.</p>
+                </div>
+
+                <div style="background: var(--bg-input); border-radius: 12px; padding: 14px; margin-bottom: 16px; border: 1px solid var(--border-color);">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                        <span style="font-size: 12px; color: var(--text-muted); font-weight: 600;">Task Capital Amount</span>
+                        <span style="font-size: 15px; font-weight: bold; color: #111827;">₹<span id="gateway-order-amt">0.00</span></span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between;">
+                        <span style="font-size: 12px; color: var(--text-muted); font-weight: 600;">Arbitrage Commission Reward</span>
+                        <span style="font-size: 14px; font-weight: bold; color: #00E676;">+₹<span id="gateway-commission-amt">0.00</span></span>
+                    </div>
+                </div>
+
+                <!-- QR payment container -->
+                <div class="qr-container" style="background: #FFFFFF; border-radius: 12px; padding: 12px; margin-bottom: 16px; border: 1px solid var(--border-color);">
+                    <p style="color: #1F2937; font-size: 10px; font-weight: bold; text-align: center; margin-bottom: 8px;">SCAN WITH ANY UPI APP (GPAY, PHONEPE, PAYTM)</p>
+                    <img id="gateway-qr-img" src="" alt="Admin UPI QR" style="width: 140px; height: 140px; display: block; margin: 0 auto; border-radius: 6px;">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" style="font-size: 10px;">Merchant UPI Address</label>
+                    <div class="upi-id-box">
+                        <span class="upi-text" id="gateway-upi-id-txt" style="font-size: 12px;">loading@ybl</span>
+                        <button class="btn-copy" onclick="copyGatewayUPI()">COPY ID</button>
+                    </div>
+                </div>
+
+                <div style="border-top: 1px dashed var(--border-color); padding-top: 14px; margin-top: 14px;">
+                    <div class="form-group">
+                        <label class="form-label" style="font-size: 10px;">Enter 12-Digit Transaction Reference (UTR / UPI Ref No)</label>
+                        <input type="text" id="gateway-utr-input" class="form-input" placeholder="Enter 12-digit UTR Code" required pattern="[0-9]{12}">
+                    </div>
+                    
+                    <button class="btn btn-accent" style="width: 100%; margin-bottom: 10px;" onclick="submitGatewayPayment()">
+                        <span class="material-symbols-outlined">check_circle</span> Submit Task Verification
+                    </button>
+                    <button class="btn btn-secondary" style="width: 100%;" onclick="cancelGatewayTask()">
+                        Cancel & Return
+                    </button>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- ================= PANEL 3: SELL RP (WITHDRAWAL/WALLET) ================= -->
+        <div id="panel-usdt" class="view-panel">
+            
+            <!-- Today's Overview (Screenshot 3) -->
+            <div class="overview-card-sell">
+                <div>
+                    <span style="font-size: 12px; color: var(--text-muted); font-weight: bold;">Amount of receipt:</span>
+                    <div style="font-size: 28px; font-weight: 800; color: #111827; margin-top: 4px;" id="sell-receipt-amount">0.0</div>
+                </div>
+                <button class="outlined-blue-btn" onclick="alert('Viewing records...')">Record</button>
+            </div>
+
+            <!-- Game Banner (Screenshot 3) -->
+            <div class="glass-panel" style="padding: 14px; display: flex; justify-content: space-between; align-items: center; border-color: #C2D7FF; background: linear-gradient(135deg, #FFFFFF 70%, rgba(41,121,255,0.02) 100%);">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <span class="material-symbols-outlined" style="font-size: 28px; color: var(--color-primary);">sports_esports</span>
+                    <div>
+                        <h4 style="font-size: 12px; font-weight: bold; color: #111827;">Game Collaboration Recommendation</h4>
+                        <p style="font-size: 10px; color: var(--color-primary); font-weight: 600; margin-top: 2px;">Visit the official game website ></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Wallet Information (Screenshot 3) -->
+            <div>
+                <h3 class="section-title">Wallet Information</h3>
+                
+                <!-- Bonded Wallet Card -->
+                <div class="glass-panel" style="padding: 16px; margin-bottom: 16px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div style="display: flex; gap: 12px; align-items: center;">
+                            <div style="background: rgba(41,121,255,0.1); color: var(--color-primary); width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+                                <span class="material-symbols-outlined" style="font-size: 24px;">account_balance</span>
+                            </div>
+                            <div>
+                                <h4 style="font-size: 15px; font-weight: bold; color: #111827;" id="wallet-app-name">mobikwik</h4>
+                                <p style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">UPI ID: <span id="wallet-app-upi">Registered</span></p>
+                                <div style="display: inline-flex; align-items: center; gap: 4px; background: rgba(0, 230, 118, 0.12); color: #00E676; padding: 2px 8px; border-radius: 4px; font-size: 9px; font-weight: bold; margin-top: 6px;">
+                                    <span class="material-symbols-outlined" style="font-size: 10px;">check_circle</span> Normal
+                                </div>
+                            </div>
+                        </div>
+                        <button class="outlined-red-btn" style="padding: 4px 12px; font-size: 11px;" id="btn-cancel-wallet" onclick="handleCancelWallet()">Cancel</button>
+                    </div>
+                    <div style="border-top: 1px solid var(--border-color); margin-top: 12px; padding-top: 10px;">
+                        <p style="font-size: 11px; color: #00E676; font-weight: 600;">Detail: Accepting orders</p>
+                    </div>
+                </div>
+
+                <!-- Bottom Action Grid (Screenshot 3) -->
+                <div class="grid-2-actions">
+                    <div class="action-card" onclick="openBindWalletModal()">
+                        <span class="material-symbols-outlined" style="font-size: 28px; color: var(--color-primary);">add_circle</span>
+                        <span style="font-size: 12px; font-weight: bold; color: #111827;">Add Wallet</span>
+                    </div>
+                    <div class="action-card" onclick="openSellFasterModal()">
+                        <span class="material-symbols-outlined" style="font-size: 28px; color: #FF9800;">bolt</span>
+                        <div style="display: flex; flex-direction: column;">
+                            <span style="font-size: 12px; font-weight: bold; color: #111827;">Sell Faster</span>
+                            <span style="font-size: 9px; color: var(--text-muted);">Available times: 0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- UPI cashout direct payout form -->
+                <div class="glass-panel" style="padding: 16px; margin-top: 16px;">
+                    <h4 style="font-size: 13px; font-weight: bold; margin-bottom: 12px; color: #111827;">Fast UPI / Bank Cashout</h4>
+                    <div class="form-group">
+                        <label class="form-label" style="font-size: 10px;">Deduct & Withdraw Amount (₹)</label>
+                        <input type="number" id="payout-amount" class="form-input" placeholder="Min withdrawal ₹300" min="300">
+                    </div>
+                    <button class="btn" onclick="submitWithdrawalRequest()">Initiate Cashout</button>
+                </div>
+
+            </div>
+
+            <!-- USDT selling ledger transactions -->
+            <div>
+                <h4 class="section-title">Cashout / Withdrawal History</h4>
+                <div class="tx-list" id="payout-history-logs">
+                    <!-- Dynamic Log Lists -->
+                </div>
+            </div>
+
+        </div>
+
+        <!-- ================= PANEL 4: MINE (PROFILE & NETWORK) ================= -->
+        <div id="panel-referrals" class="view-panel">
+            
+            <!-- User profile header (Screenshot 4) -->
+            <div class="glass-panel" style="padding: 16px;">
+                <div class="profile-card-header">
+                    <div class="avatar-circle">M</div>
+                    <div>
+                        <h3 style="font-size: 18px; font-weight: 800; color: #111827;" id="mine-user-mobile">MOBILE: Loading...</h3>
+                        <div class="invite-code-pill" onclick="copyRefCodeMain()">
+                            <span>Invite Code: <span id="mine-invite-code">qBSLH6</span></span>
+                            <span class="material-symbols-outlined" style="font-size: 14px; cursor: pointer;">content_copy</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Current Balance (Screenshot 4) -->
+            <div class="balance-card-mine" onclick="switchPanel('usdt')">
+                <div>
+                    <span style="font-size: 11px; color: var(--text-muted); font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px;">Current Balance</span>
+                    <div style="font-size: 32px; font-weight: 900; color: #111827; margin-top: 4px;">₹<span id="mine-balance-val">0.00</span></div>
+                </div>
+                <span class="material-symbols-outlined arrow-right" style="font-size: 28px;">chevron_right</span>
+            </div>
+
+            <!-- My team rebate (Screenshot 4) -->
+            <div class="team-card-mine">
+                <div>
+                    <h4 style="font-size: 15px; font-weight: bold; color: #111827;">My team</h4>
+                    <p style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">3-LEVEL rebate mechanism</p>
+                    <button class="outlined-blue-btn" style="margin-top: 10px; padding: 4px 12px; font-size: 11px;" onclick="openTeamModal()">View earnings ></button>
+                </div>
+                <!-- Mini vector illustration for team -->
+                <div style="background: rgba(41,121,255,0.08); width: 64px; height: 64px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--color-primary);">
+                    <span class="material-symbols-outlined" style="font-size: 36px;">group</span>
+                </div>
+            </div>
+
+            <!-- Menu lists (Screenshot 4) -->
+            <div class="menu-list-group">
+                <div class="menu-row-item" onclick="claimNewbieBonus()">
+                    <div class="menu-row-left">
+                        <span class="material-symbols-outlined menu-icon">featured_play_list</span>
+                        <span class="menu-text">Newbie Rewards</span>
+                    </div>
+                    <span class="material-symbols-outlined arrow-right">chevron_right</span>
+                </div>
+                <div class="menu-row-item" onclick="openBindWalletModal()">
+                    <div class="menu-row-left">
+                        <span class="material-symbols-outlined menu-icon">grid_view</span>
+                        <span class="menu-text">Bind payment APP</span>
+                    </div>
+                    <span class="material-symbols-outlined arrow-right">chevron_right</span>
+                </div>
+                <div class="menu-row-item" onclick="alert('FAQs:\n1. What is minimum withdrawal?\n- Minimum withdrawal limit is ₹300.\n2. How to receive a commission reward?\n- Go to Buy RP and grab orders.\n3. How fast is checkout verification?\n- Standard verification takes under 3-5 minutes.')">
+                    <div class="menu-row-left">
+                        <span class="material-symbols-outlined menu-icon">help</span>
+                        <span class="menu-text">Common problem</span>
+                    </div>
+                    <span class="material-symbols-outlined arrow-right">chevron_right</span>
+                </div>
+                <div class="menu-row-item" onclick="alert('Online chat support is currently busy. Please contact support@extrapay.org or join our Telegram channel.')">
+                    <div class="menu-row-left">
+                        <span class="material-symbols-outlined menu-icon">headset_mic</span>
+                        <span class="menu-text">Online service</span>
+                    </div>
+                    <span class="material-symbols-outlined arrow-right">chevron_right</span>
+                </div>
+                <div class="menu-row-item" onclick="openSecuritySettings()">
+                    <div class="menu-row-left">
+                        <span class="material-symbols-outlined menu-icon">security</span>
+                        <span class="menu-text">Account security</span>
+                    </div>
+                    <span class="material-symbols-outlined arrow-right">chevron_right</span>
+                </div>
+                <div class="menu-row-item" onclick="window.open('https://t.me/extrapay_official', '_blank')">
+                    <div class="menu-row-left">
+                        <span class="material-symbols-outlined menu-icon">send</span>
+                        <span class="menu-text">Official Channel</span>
+                    </div>
+                    <span class="material-symbols-outlined arrow-right">chevron_right</span>
+                </div>
+            </div>
+
+            <!-- Big Logout Button -->
+            <button class="logout-btn-mine" onclick="handleLogout()">Logout</button>
+
+        </div>
+
+    </main>
+
+    <!-- Bottom Navigation Bar (Screenshot items) -->
+    <nav class="bottom-nav">
+        <button id="nav-dash" class="nav-item active" onclick="switchPanel('dash')">
+            <span class="material-symbols-outlined nav-icon">home</span>
+            <span>Home</span>
+        </button>
+        <button id="nav-tasks" class="nav-item" onclick="switchPanel('tasks')">
+            <span class="material-symbols-outlined nav-icon">shopping_bag</span>
+            <span>Buy RP</span>
+        </button>
+        <button id="nav-usdt" class="nav-item" onclick="switchPanel('usdt')">
+            <span class="material-symbols-outlined nav-icon">swap_horiz</span>
+            <span>Sell RP</span>
+        </button>
+        <button id="nav-referrals" class="nav-item" onclick="switchPanel('referrals')">
+            <span class="material-symbols-outlined nav-icon">person</span>
+            <span>Mine</span>
+        </button>
+        <button id="nav-admin" class="nav-item" style="color: var(--color-warning); display: none;" onclick="goToAdminPanel()">
+            <span class="material-symbols-outlined nav-icon">admin_panel_settings</span>
+            <span>Admin</span>
+        </button>
+    </nav>
+
+    <!-- Global Toast overlay -->
+    <div id="toast" class="toast">
+        <span id="toast-text" class="toast-message">Notification Message</span>
+        <span class="material-symbols-outlined" style="font-size: 16px; color: var(--text-muted); cursor: pointer;" onclick="hideToast()">close</span>
+    </div>
+
+    <!-- Modals Layer -->
+    <!-- Bind Wallet Modal -->
+    <div id="bind-wallet-overlay" class="overlay" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Bind Payment App</h3>
+                <button class="btn-close" style="font-size: 24px;" onclick="closeBindWalletModal()">×</button>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Payment App Platform</label>
+                <select class="form-input" id="bind-wallet-type" style="height: auto;">
+                    <option value="mobikwik">Mobikwik</option>
+                    <option value="phonepe">PhonePe</option>
+                    <option value="paytm">Paytm</option>
+                    <option value="gpay">Google Pay</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Your Receiving UPI Address</label>
+                <input type="text" id="bind-wallet-upi" class="form-input" placeholder="e.g. 916376172214@ybl">
+            </div>
+            <button class="btn" style="margin-top: 10px;" onclick="saveBindWallet()">Save Wallet</button>
+        </div>
+    </div>
+
+    <!-- View Earnings / Team List Modal -->
+    <div id="team-overlay" class="overlay" style="display: none;">
+        <div class="modal-content" style="max-width: 440px; max-height: 85vh; overflow-y: auto;">
+            <div class="modal-header" style="border-bottom: 1px solid var(--border-color); padding-bottom: 10px; margin-bottom: 14px;">
+                <h3 class="modal-title" style="display: flex; align-items: center; gap: 8px;">
+                    <span class="material-symbols-outlined" style="color: var(--color-primary);">share</span> Referral & Team Network
+                </h3>
+                <button class="btn-close" style="font-size: 24px;" onclick="closeTeamModal()">×</button>
+            </div>
+
+            <!-- INVITATION PANEL -->
+            <div style="background: linear-gradient(135deg, rgba(41, 121, 255, 0.08) 0%, rgba(41, 121, 255, 0.02) 100%); border-radius: 12px; padding: 14px; margin-bottom: 16px; border: 1px solid rgba(41, 121, 255, 0.15);">
+                <div style="font-size: 11px; font-weight: bold; color: var(--color-primary); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">My Invitation Link</div>
+                
+                <div style="display: flex; gap: 6px; margin-bottom: 10px;">
+                    <input type="text" id="team-invite-link" readonly style="flex: 1; background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 8px; padding: 8px 12px; font-size: 11px; color: var(--text-main); font-family: monospace;" value="">
+                    <button style="background: var(--color-primary); color: white; border: none; padding: 0 12px; border-radius: 8px; font-size: 11px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 4px;" onclick="copyTeamInviteLink()">
+                        <span class="material-symbols-outlined" style="font-size: 14px;">content_copy</span> Copy
+                    </button>
+                </div>
+
+                <div style="display: flex; justify-content: space-between; align-items: center; font-size: 12px; background: rgba(255,255,255,0.4); padding: 6px 10px; border-radius: 8px;">
+                    <span style="color: var(--text-muted); font-weight: 600;">Referral Code:</span>
+                    <span style="font-family: monospace; font-weight: 800; color: var(--text-main); letter-spacing: 1px;" id="team-invite-code-display">------</span>
+                </div>
+            </div>
+
+            <!-- TEAM STATS GRID -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px;">
+                <div style="background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 10px; padding: 10px; text-align: center;">
+                    <span style="font-size: 10px; color: var(--text-muted); font-weight: bold; text-transform: uppercase;">Total Team Size</span>
+                    <div id="team-total-members" style="font-size: 18px; font-weight: 900; color: var(--text-main); margin-top: 4px;">0</div>
+                </div>
+                <div style="background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 10px; padding: 10px; text-align: center;">
+                    <span style="font-size: 10px; color: var(--text-muted); font-weight: bold; text-transform: uppercase;">Total Commissions</span>
+                    <div id="team-total-earned" style="font-size: 18px; font-weight: 900; color: #00E676; margin-top: 4px;">₹0.00</div>
+                </div>
+            </div>
+
+            <!-- TABS FOR CHILDS -->
+            <div style="display: flex; border-bottom: 1px solid var(--border-color); margin-bottom: 12px;">
+                <button class="team-tab-btn active" style="flex: 1;" onclick="switchTeamTab(1)">
+                    L1 Direct (2%)<br><span id="team-tab-count-l1" style="font-size: 10px; opacity: 0.8; font-weight: 800;">0</span>
+                </button>
+                <button class="team-tab-btn" style="flex: 1;" onclick="switchTeamTab(2)">
+                    L2 Team (1%)<br><span id="team-tab-count-l2" style="font-size: 10px; opacity: 0.8; font-weight: 800;">0</span>
+                </button>
+                <button class="team-tab-btn" style="flex: 1;" onclick="switchTeamTab(3)">
+                    L3 Team (0.5%)<br><span id="team-tab-count-l3" style="font-size: 10px; opacity: 0.8; font-weight: 800;">0</span>
+                </button>
+            </div>
+
+            <!-- MEMBERS LIST -->
+            <div style="font-size: 11px; font-weight: bold; text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px; letter-spacing: 0.5px;">Registered Members</div>
+            <div id="team-members-list" style="max-height: 180px; overflow-y: auto; margin-bottom: 16px; border-bottom: 1px dashed var(--border-color); padding-bottom: 8px;">
+                <!-- Dynamically filled with team-member-item -->
+            </div>
+
+            <!-- LEDGER / AUDITS -->
+            <div style="font-size: 11px; font-weight: bold; text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px; letter-spacing: 0.5px;">Commissions Ledger Audit</div>
+            <div class="tx-list" id="modal-net-logs-container" style="max-height: 180px; overflow-y: auto;">
+                <!-- Dynamic referral audits -->
+            </div>
+        </div>
+    </div>
+
+    <!-- USDT Top-up / Arbitrage Deposit Modal -->
+    <div id="usdt-topup-overlay" class="overlay" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">USDT Arbitrage Deposit</h3>
+                <button class="btn-close" style="font-size: 24px;" onclick="closeUsdtTopUpModal()">×</button>
+            </div>
+            
+            <div style="background: rgba(41, 121, 255, 0.05); border-radius: 12px; padding: 14px; margin-bottom: 16px; border: 1px solid rgba(41, 121, 255, 0.15);">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 13px;">
+                    <span style="color: var(--text-muted); font-weight: 600;">Preferred Network:</span>
+                    <span style="font-weight: bold; color: var(--color-primary);">BSC (BEP20)</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; font-size: 13px;">
+                    <span style="color: var(--text-muted); font-weight: 600;">Exchange Rate:</span>
+                    <span style="font-weight: bold; color: #00E676;">1 USDT = ₹<span id="usdt-rate-display">112.00</span></span>
+                </div>
+            </div>
+
+            <!-- USDT QR payment container -->
+            <div class="qr-container" style="background: #FFFFFF; border-radius: 12px; padding: 12px; margin-bottom: 16px; border: 1px solid var(--border-color); text-align: center;">
+                <p style="color: #1F2937; font-size: 10px; font-weight: bold; text-align: center; margin-bottom: 8px;">SCAN USDT BEP20 DEPOSIT ADDRESS</p>
+                <img id="usdt-qr-img" src="" alt="Admin USDT QR" style="width: 130px; height: 130px; display: block; margin: 0 auto; border-radius: 6px;">
+            </div>
+
+            <!-- Admin wallet address box -->
+            <div class="form-group">
+                <label class="form-label" style="font-size: 11px;">Admin USDT BEP20 Address</label>
+                <div class="upi-id-box" style="background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 8px; display: flex; justify-content: space-between; align-items: center; padding: 8px 12px;">
+                    <span id="usdt-address-display" style="font-family: monospace; font-size: 11px; word-break: break-all; color: var(--text-main); margin-right: 8px;">0x32fdc39a382a47291a1829e71b29a3910c293710</span>
+                    <button class="btn-copy" style="background: var(--color-primary); color: white; border: none; padding: 4px 8px; border-radius: 4px; font-size: 10px; font-weight: bold; cursor: pointer; flex-shrink: 0;" onclick="copyUsdtAddress()">COPY</button>
+                </div>
+                <p style="font-size: 10px; color: var(--color-danger); font-weight: bold; margin-top: 6px; text-transform: uppercase;">Transfer only via BEP20 Network. Other networks will lead to loss of assets.</p>
+            </div>
+
+            <!-- Input USDT Amount -->
+            <div class="form-group" style="margin-top: 12px;">
+                <label class="form-label">USDT Amount to Deposit</label>
+                <input type="number" id="usdt-topup-amount" class="form-input" placeholder="Enter USDT amount (e.g. 50)" step="any" oninput="updateUsdtInrPreview()">
+            </div>
+
+            <!-- Preview in INR -->
+            <div style="background: var(--bg-input); border-radius: 12px; padding: 14px; margin-bottom: 16px; border: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-size: 12px; color: var(--text-muted); font-weight: 600;">Estimated INR Credit</span>
+                <span style="font-size: 16px; font-weight: bold; color: #00E676;">₹<span id="usdt-topup-inr-preview">0.00</span></span>
+            </div>
+
+            <!-- Blockchain Transaction ID / TxID -->
+            <div class="form-group">
+                <label class="form-label">Transaction Hash / TxID</label>
+                <input type="text" id="usdt-topup-txid" class="form-input" placeholder="Paste 64-character transaction TxID">
+            </div>
+
+            <button class="btn" style="width: 100%; margin-top: 10px; font-weight: bold;" onclick="submitUsdtTopUp()">
+                <span class="material-symbols-outlined" style="font-size: 18px; vertical-align: middle; margin-right: 4px;">check_circle</span> Submit Arbitrage Deposit
+            </button>
+        </div>
+    </div>
+
+    <!-- MAIN UI PAGE SCRIPT -->
+    <script>
+        let loggedUser = null;
+        let activeTimerInterval = null;
+        let selectedVipLevel = 1;
+
+        function showToast(message, isSuccess = true) {
+            const toast = document.getElementById('toast');
+            const text = document.getElementById('toast-text');
+            text.innerText = message;
+            toast.style.borderLeftColor = isSuccess ? 'var(--color-success)' : 'var(--color-danger)';
+            toast.classList.add('show');
+            setTimeout(() => {
+                hideToast();
+            }, 3500);
+        }
+
+        function hideToast() {
+            const toast = document.getElementById('toast');
+            if(toast) toast.classList.remove('show');
+        }
+
+        function handleLogout() {
+            window.epDb.logout();
+            window.location.href = 'login.html';
+        }
+
+        function switchPanel(panelId) {
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.view-panel').forEach(el => el.classList.remove('active'));
+
+            const navBtn = document.getElementById(`nav-${panelId}`);
+            if (navBtn) navBtn.classList.add('active');
+            
+            const panelEl = document.getElementById(`panel-${panelId}`);
+            if (panelEl) panelEl.classList.add('active');
+
+            renderUserData();
+        }
+
+        function goToAdminPanel() {
+            window.location.href = 'admin.html';
+        }
+
+        function claimNewbieBonus() {
+            if (loggedUser) {
+                if (loggedUser.first_task_bonus_received) {
+                    showToast("Newcomer reward already claimed!", true);
+                } else {
+                    // Update user balance by adding bonus
+                    const users = window.epDb.getUsers();
+                    users[loggedUser.email].wallet_balance += 50; // Extra newbie gift
+                    users[loggedUser.email].first_task_bonus_received = true;
+                    localStorage.setItem('ep_users', JSON.stringify(users));
+                    showToast("Congratulations! Newcomer bonus of ₹50 added to your balance!", true);
+                    renderUserData();
+                }
+            }
+        }
+
+        // Wallet Binding Modals
+        function openBindWalletModal() {
+            document.getElementById('bind-wallet-overlay').style.display = 'flex';
+        }
+        function closeBindWalletModal() {
+            document.getElementById('bind-wallet-overlay').style.display = 'none';
+        }
+        function saveBindWallet() {
+            const upi = document.getElementById('bind-wallet-upi').value.trim();
+            const type = document.getElementById('bind-wallet-type').value;
+            if(!upi) {
+                showToast("Please enter a valid UPI address", false);
+                return;
+            }
+            // Save inside user database object
+            const users = window.epDb.getUsers();
+            users[loggedUser.email].bound_upi = upi;
+            users[loggedUser.email].bound_wallet_type = type;
+            localStorage.setItem('ep_users', JSON.stringify(users));
+            
+            showToast("UPI Wallet bound successfully!", true);
+            closeBindWalletModal();
+            renderUserData();
+        }
+
+        function handleCancelWallet() {
+            if(confirm("Are you sure you want to unbind this wallet?")) {
+                const users = window.epDb.getUsers();
+                users[loggedUser.email].bound_upi = null;
+                users[loggedUser.email].bound_wallet_type = null;
+                localStorage.setItem('ep_users', JSON.stringify(users));
+                showToast("Wallet unbound.", true);
+                renderUserData();
+            }
+        }
+
+        // View earnings/Team Modal
+        let activeTeamTab = 1;
+        function openTeamModal() {
+            renderTeamDashboard();
+            document.getElementById('team-overlay').style.display = 'flex';
+        }
+        function closeTeamModal() {
+            document.getElementById('team-overlay').style.display = 'none';
+        }
+        function copyTeamInviteLink() {
+            const val = document.getElementById('team-invite-link').value;
+            navigator.clipboard.writeText(val).then(() => {
+                showToast('Invitation link copied successfully!', true);
+            });
+        }
+        function renderTeamDashboard() {
+            if (!loggedUser) return;
+            
+            // Generate professional registration invite link
+            const origin = window.location.origin || '';
+            const path = window.location.pathname || '/';
+            const cleanPath = path.substring(0, path.lastIndexOf('/')) + '/login.html';
+            const inviteLink = (origin + cleanPath + '?ref=' + loggedUser.uid).replace(/\/\/login/g, '/login');
+            
+            document.getElementById('team-invite-link').value = inviteLink;
+            document.getElementById('team-invite-code-display').innerText = loggedUser.uid;
+            
+            const team = window.epDb.getReferralTeamStats(loggedUser.uid);
+            
+            // Sum up total REFERRAL_REWARD transactions for loggedUser
+            const txs = window.epDb.getTransactions();
+            const refTxs = txs.filter(t => t.uid === loggedUser.uid && t.type === 'REFERRAL_REWARD');
+            const totalRefEarned = refTxs.reduce((sum, t) => sum + (parseFloat(t.amount_inr) || 0), 0);
+            
+            document.getElementById('team-total-earned').innerText = '₹' + totalRefEarned.toFixed(2);
+            document.getElementById('team-total-members').innerText = team.l1Count + team.l2Count + team.l3Count;
+            
+            document.getElementById('team-tab-count-l1').innerText = team.l1Count;
+            document.getElementById('team-tab-count-l2').innerText = team.l2Count;
+            document.getElementById('team-tab-count-l3').innerText = team.l3Count;
+            
+            // Default to selected tab
+            switchTeamTab(activeTeamTab);
+            
+            // Force rendering of ledger audits
+            renderTxsAndActivity();
+        }
+        function switchTeamTab(level) {
+            activeTeamTab = level;
+            
+            // Style active tabs
+            const tabButtons = document.querySelectorAll('.team-tab-btn');
+            tabButtons.forEach((btn, idx) => {
+                if (idx + 1 === level) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+            
+            const team = window.epDb.getReferralTeamStats(loggedUser.uid);
+            const membersList = document.getElementById('team-members-list');
+            if (!membersList) return;
+            membersList.innerHTML = '';
+            
+            let levelUsers = [];
+            let rate = 0;
+            if (level === 1) {
+                levelUsers = team.l1Users || [];
+                rate = 2.0; // 2%
+            } else if (level === 2) {
+                levelUsers = team.l2Users || [];
+                rate = 1.0; // 1%
+            } else if (level === 3) {
+                levelUsers = team.l3Users || [];
+                rate = 0.5; // 0.5%
+            }
+            
+            if (levelUsers.length === 0) {
+                membersList.innerHTML = `
+                    <div style="text-align: center; padding: 24px; color: var(--text-muted); font-size: 11px;">
+                        <span class="material-symbols-outlined" style="font-size: 28px; display: block; margin-bottom: 6px; color: rgba(0,0,0,0.06);">group_off</span>
+                        No members registered at Level ${level} yet.
+                    </div>
+                `;
+                return;
+            }
+            
+            levelUsers.forEach(u => {
+                const dateStr = new Date(u.joined).toLocaleDateString();
+                // Commission: calculated based on standard order commissions at level rates
+                const estimatedComm = u.total_tasks * (rate / 100) * 110;
+                
+                const card = document.createElement('div');
+                card.style = 'background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 8px; padding: 8px 10px; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center;';
+                card.innerHTML = `
+                    <div>
+                        <div style="font-weight: 700; font-size: 12px; color: var(--text-main);">${u.name}</div>
+                        <div style="font-size: 9px; color: var(--text-muted); margin-top: 1px;">Joined: ${dateStr}</div>
+                    </div>
+                    <div style="text-align: right;">
+                        <div style="font-size: 10px; font-weight: 700; color: var(--color-primary);">${u.total_tasks} Tasks Completed</div>
+                        <div style="font-size: 9px; color: #00E676; font-weight: bold; margin-top: 1px;">Est. Commission: +₹${parseFloat(estimatedComm).toFixed(2)}</div>
+                    </div>
+                `;
+                membersList.appendChild(card);
+            });
+        }
+
+        function openSellFasterModal() {
+            alert("Sell Faster active! Speed boost match with fast payout node successfully engaged.");
+        }
+
+        // USDT Top-up Modal Handlers
+        function openUsdtTopUpModal() {
+            const settings = window.epDb.getSettings();
+            const addr = settings.usdtAddress || '0x71e7edd284200a067b8e549af6f397e0396796e2';
+            document.getElementById('usdt-rate-display').innerText = settings.usdtRate || '112.00';
+            document.getElementById('usdt-address-display').innerText = addr;
+            
+            // Set USDT QR code image
+            document.getElementById('usdt-qr-img').src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&color=0c0f17&data=${encodeURIComponent(addr)}`;
+            
+            document.getElementById('usdt-topup-amount').value = '';
+            document.getElementById('usdt-topup-inr-preview').innerText = '0.00';
+            document.getElementById('usdt-topup-txid').value = '';
+            document.getElementById('usdt-topup-overlay').style.display = 'flex';
+        }
+        function closeUsdtTopUpModal() {
+            document.getElementById('usdt-topup-overlay').style.display = 'none';
+        }
+        function updateUsdtInrPreview() {
+            const amt = parseFloat(document.getElementById('usdt-topup-amount').value) || 0;
+            const settings = window.epDb.getSettings();
+            const rate = settings.usdtRate || 112;
+            const preview = amt * rate;
+            document.getElementById('usdt-topup-inr-preview').innerText = preview.toFixed(2);
+        }
+        function copyUsdtAddress() {
+            const addr = document.getElementById('usdt-address-display').innerText;
+            navigator.clipboard.writeText(addr).then(() => {
+                showToast("USDT BEP20 address copied!", true);
+            });
+        }
+        function submitUsdtTopUp() {
+            const amountVal = document.getElementById('usdt-topup-amount').value;
+            const txId = document.getElementById('usdt-topup-txid').value.trim();
+            if (!amountVal || parseFloat(amountVal) <= 0) {
+                showToast("Please enter a valid USDT amount.", false);
+                return;
+            }
+            if (!txId || txId.length < 8) {
+                showToast("Please enter a valid blockchain transaction TxID.", false);
+                return;
+            }
+            try {
+                window.epDb.submitUsdtSell(loggedUser.email, amountVal, txId, null);
+                showToast("USDT top-up submitted! Wait 3-5 minutes for admin confirmation.", true);
+                closeUsdtTopUpModal();
+                renderUserData();
+            } catch(e) {
+                showToast(e.message, false);
+            }
+        }
+
+        function openSecuritySettings() {
+            const newPassword = prompt("Enter your new secure password (min 6 characters):");
+            if (newPassword) {
+                if (newPassword.length < 6) {
+                    showToast("Password must be at least 6 characters.", false);
+                    return;
+                }
+                const users = window.epDb.getUsers();
+                users[loggedUser.email].password = newPassword;
+                localStorage.setItem('ep_users', JSON.stringify(users));
+                showToast("Password changed successfully!", true);
+            }
+        }
+
+        // Core Renderer
+        function renderUserData() {
+            loggedUser = window.epDb.getCurrentUser();
+            if (!loggedUser) {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            // Show/Hide Admin Nav Item based on admin status
+            const adminNav = document.getElementById('nav-admin');
+            if (adminNav) {
+                if (loggedUser.isAdmin) {
+                    adminNav.style.display = 'flex';
+                } else {
+                    adminNav.style.display = 'none';
+                }
+            }
+
+            // Sync User Metadata
+            document.getElementById('user-display-name').innerText = loggedUser.name;
+            document.getElementById('mine-user-mobile').innerText = `MOBILE: ${loggedUser.email.split('@')[0].replace(/[^0-9]/g, '') || '916376172214'}`;
+            document.getElementById('mine-invite-code').innerText = loggedUser.uid;
+            document.getElementById('mine-balance-val').innerText = parseFloat(loggedUser.wallet_balance).toFixed(2);
+            document.getElementById('sell-receipt-amount').innerText = parseFloat(loggedUser.commissions || 0).toFixed(2);
+
+            // Bind Bound Wallet display details
+            const upiLabel = document.getElementById('wallet-app-upi');
+            const walletApp = document.getElementById('wallet-app-name');
+            const cancelBtn = document.getElementById('btn-cancel-wallet');
+            if (loggedUser.bound_upi) {
+                upiLabel.innerText = loggedUser.bound_upi;
+                walletApp.innerText = loggedUser.bound_wallet_type || 'mobikwik';
+                cancelBtn.style.display = 'block';
+            } else {
+                upiLabel.innerText = 'Not bound yet. Click below to add wallet.';
+                walletApp.innerText = 'No wallet bound';
+                cancelBtn.style.display = 'none';
+            }
+
+            // Synchronize Stat boxes (Screenshot 1: Buy quantity, Buy Amount, Sell today, Total revenue)
+            const completedCount = loggedUser.total_tasks_completed || 0;
+            const completedToday = loggedUser.tasks_completed_today || 0;
+            document.getElementById('home-buy-quantity').innerText = completedCount;
+            document.getElementById('home-buy-amount').innerText = '₹' + parseFloat(completedCount * 110).toFixed(2);
+            document.getElementById('home-sell-today').innerText = '₹' + parseFloat(completedToday * 105).toFixed(2);
+            document.getElementById('home-total-revenue').innerText = '₹' + parseFloat(loggedUser.commissions || 3.00).toFixed(2);
+
+            // Check matched gateway order status
+            checkActiveTaskGateway();
+
+            // Setup Sponsor levels
+            const team = window.epDb.getReferralTeamStats(loggedUser.uid);
+            const l1El = document.getElementById('team-tab-count-l1');
+            const l2El = document.getElementById('team-tab-count-l2');
+            const l3El = document.getElementById('team-tab-count-l3');
+            if (l1El) l1El.innerText = team.l1Count;
+            if (l2El) l2El.innerText = team.l2Count;
+            if (l3El) l3El.innerText = team.l3Count;
+
+            // Global config settings
+            const settings = window.epDb.getSettings();
+            document.getElementById('gateway-upi-id-txt').innerText = settings.upiId;
+            document.getElementById('gateway-qr-img').src = settings.qrUrl;
+
+            // Build dynamic lists
+            renderTxsAndActivity();
+            renderVipPills();
+            renderOrderList();
+        }
+
+        function checkActiveTaskGateway() {
+            const activeTasks = window.epDb.getActiveTasks();
+            const task = activeTasks[loggedUser.uid];
+
+            const grabScreen = document.getElementById('task-grab-screen');
+            const gatewayScreen = document.getElementById('gateway-screen');
+
+            if (task && task.status === 'ACTIVE') {
+                grabScreen.style.display = 'none';
+                gatewayScreen.style.display = 'block';
+
+                document.getElementById('gateway-merchant-title').innerText = `Matched Merchant: ${task.levelName}`;
+                document.getElementById('gateway-order-id').innerText = task.orderId;
+                document.getElementById('gateway-order-amt').innerText = task.amount.toFixed(2);
+                document.getElementById('gateway-commission-amt').innerText = task.commission.toFixed(2);
+
+                startGatewayClock();
+            } else {
+                grabScreen.style.display = 'block';
+                gatewayScreen.style.display = 'none';
+                if (activeTimerInterval) clearInterval(activeTimerInterval);
+            }
+        }
+
+        function startGatewayClock() {
+            if (activeTimerInterval) clearInterval(activeTimerInterval);
+
+            const gatewayClock = document.getElementById('gateway-clock');
+
+            activeTimerInterval = setInterval(() => {
+                const activeTasks = window.epDb.getActiveTasks();
+                const task = activeTasks[loggedUser.uid];
+
+                if (!task || task.status !== 'ACTIVE') {
+                    clearInterval(activeTimerInterval);
+                    checkActiveTaskGateway();
+                    return;
+                }
+
+                const deltaMs = task.expiresAt - Date.now();
+                if (deltaMs <= 0) {
+                    clearInterval(activeTimerInterval);
+                    task.status = 'EXPIRED';
+                    window.epDb.saveActiveTasks(activeTasks);
+                    showToast('Gateway expired (10 minutes session limit reached). Order canceled.', false);
+                    checkActiveTaskGateway();
+                    renderUserData();
+                    return;
+                }
+
+                const totalSecs = Math.floor(deltaMs / 1000);
+                const mm = Math.floor(totalSecs / 60);
+                const ss = totalSecs % 60;
+                const clockStr = `${mm.toString().padStart(2,'0')}:${ss.toString().padStart(2,'0')}`;
+
+                if (gatewayClock) gatewayClock.innerText = clockStr;
+            }, 1000);
+        }
+
+        // Grab / Receive specific task order
+        function selectAndReceiveTask(amount) {
+            try {
+                if (loggedUser.wallet_balance < amount) {
+                    throw new Error(`Insufficient wallet balance. Selected order requires ₹${amount.toFixed(2)}.`);
+                }
+                const task = window.epDb.receiveTask(loggedUser.email, amount);
+                showToast(`P2P Arbitrage order locked successfully! Transfer security capital.`, true);
+                renderUserData();
+            } catch (e) {
+                showToast(e.message, false);
+            }
+        }
+
+        function submitGatewayPayment() {
+            const utr = document.getElementById('gateway-utr-input').value.trim();
+            if (!utr || utr.length !== 12) {
+                showToast('Please enter a valid 12-Digit transaction reference UTR code.', false);
+                return;
+            }
+
+            try {
+                window.epDb.submitGatewayPayment(loggedUser.email, utr, null);
+                showToast('UTR submitted successfully! Awaiting verification confirmation.', true);
+                document.getElementById('gateway-utr-input').value = '';
+                switchPanel('dash');
+            } catch (e) {
+                showToast(e.message, false);
+            }
+        }
+
+        function cancelGatewayTask() {
+            if (confirm('Cancel this active order? Gateway channel session will terminate immediately.')) {
+                window.epDb.cancelActiveTask(loggedUser.email);
+                showToast('Matched order cancelled.', true);
+                renderUserData();
+            }
+        }
+
+        function submitWithdrawalRequest() {
+            const amountVal = document.getElementById('payout-amount').value.trim();
+            if (!amountVal) {
+                showToast('Please enter an amount to cashout.', false);
+                return;
+            }
+
+            const amount = parseFloat(amountVal);
+            if (amount < 300) {
+                showToast('Minimum withdrawal request is ₹300.', false);
+                return;
+            }
+
+            if (!loggedUser.bound_upi) {
+                showToast('Please bind your payment UPI wallet first.', false);
+                return;
+            }
+
+            try {
+                window.epDb.submitWithdrawal(loggedUser.email, amount, loggedUser.bound_upi, loggedUser.name);
+                showToast('Withdrawal successful! Cashout is pending validation.', true);
+                document.getElementById('payout-amount').value = '';
+                renderUserData();
+            } catch (e) {
+                showToast(e.message, false);
+            }
+        }
+
+        function copyGatewayUPI() {
+            const val = document.getElementById('gateway-upi-id-txt').innerText;
+            navigator.clipboard.writeText(val).then(() => {
+                showToast('Merchant UPI ID copied!', true);
+            });
+        }
+
+        function copyRefCodeMain() {
+            const val = document.getElementById('mine-invite-code').innerText;
+            navigator.clipboard.writeText(val).then(() => {
+                showToast('Referral code copied!', true);
+            });
+        }
+
+        // Render dynamic VIP selection pills (Screenshot 2)
+        function renderVipPills() {
+            const container = document.getElementById('vip-tabs-scroll');
+            if(!container) return;
+            container.innerHTML = '';
+            for(let i = 1; i <= 7; i++) {
+                const btn = document.createElement('button');
+                btn.className = `vip-tab-pill ${selectedVipLevel === i ? 'active' : ''}`;
+                btn.innerText = `L${i}`;
+                btn.onclick = () => {
+                    selectedVipLevel = i;
+                    renderVipPills();
+                    renderOrderList();
+                };
+                container.appendChild(btn);
+            }
+        }
+
+        // Render dynamic matching orders list (Screenshot 2)
+        function renderOrderList() {
+            const container = document.getElementById('p2p-orders-list');
+            if(!container) return;
+            container.innerHTML = '';
+
+            const levelDetails = window.epDb.getLevelDetails(selectedVipLevel);
+            const commissionRate = levelDetails.commission;
+
+            // Generate representative order options for the selected VIP level
+            let baseAmounts = [];
+            if (selectedVipLevel === 1) {
+                baseAmounts = [100.0, 101.0, 110.0, 127.0, 188.0, 200.0];
+            } else {
+                const multiplier = levelDetails.cost;
+                baseAmounts = [
+                    multiplier,
+                    multiplier + 10,
+                    multiplier + 50,
+                    multiplier + 120,
+                    multiplier + 240,
+                    multiplier + 400
+                ];
+            }
+
+            // Handle sort logic
+            const sortMode = document.getElementById('sort-select').value;
+            if (sortMode === 'high_low') {
+                baseAmounts.sort((a, b) => b - a);
+            } else {
+                baseAmounts.sort((a, b) => a - b);
+            }
+
+            // Build dynamic UI orders cards
+            baseAmounts.forEach((amt, index) => {
+                const orderQty = Math.floor(6 + (amt % 17));
+                const baseReward = (amt * commissionRate);
+                const firstTaskBonus = 2.0; // matching Screenshot bonus '+2.0'
+                const finalRP = amt + baseReward + firstTaskBonus;
+
+                const cardHtml = `
+                    <div class="order-card">
+                        <div class="order-main-info">
+                            <div class="order-amount-title">Order amount: ${amt.toFixed(1)}</div>
+                            <span class="order-subtitle">Order quantity: ${orderQty}</span>
+                            <span class="order-subtitle">Reward: <span class="order-reward-green">${baseReward.toFixed(2)}</span><span style="color: var(--color-primary); font-weight:bold;">+${firstTaskBonus.toFixed(1)}</span></span>
+                            <span class="order-final-txt">Final: ${finalRP.toFixed(2)} RP</span>
+                        </div>
+                        <button class="btn btn-accent" style="width: auto; padding: 6px 16px; border-radius: 20px; font-size: 12px; font-weight: 800; text-transform:none;" onclick="selectAndReceiveTask(${amt})">Receive</button>
+                    </div>
+                `;
+                container.innerHTML += cardHtml;
+            });
+        }
+
+        function refreshOrders() {
+            showToast("Orders refreshed!", true);
+            renderOrderList();
+        }
+
+        // Render dynamic transaction logs lists
+        function renderTxsAndActivity() {
+            const txs = window.epDb.getTransactions();
+            const userTxs = txs.filter(t => t.uid === loggedUser.uid);
+
+            const dashLogs = document.getElementById('home-activity-logs');
+            const payoutLogs = document.getElementById('payout-history-logs');
+            const netLogs = document.getElementById('modal-net-logs-container');
+
+            if(dashLogs) dashLogs.innerHTML = '';
+            if(payoutLogs) payoutLogs.innerHTML = '';
+            if(netLogs) netLogs.innerHTML = '';
+
+            userTxs.forEach(tx => {
+                const dateStr = new Date(tx.timestamp).toLocaleString();
+                const sign = tx.amount_inr >= 0 ? '+' : '';
+                const colorClass = tx.amount_inr >= 0 ? 'amount-add' : 'amount-sub';
+                
+                let statusClass = 'status-pending';
+                if (tx.status === 'APPROVED') statusClass = 'status-approved';
+                if (tx.status === 'REJECTED') statusClass = 'status-rejected';
+
+                const html = `
+                    <div class="tx-item">
+                        <div class="tx-info">
+                            <span class="tx-title" style="font-weight: bold; color: #1F2937;">${tx.details}</span>
+                            <span class="tx-date">${dateStr} | ID: ${tx.tx_id}</span>
+                        </div>
+                        <div style="text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 4px;">
+                            <span class="tx-amount ${colorClass}">${sign}₹${Math.abs(tx.amount_inr).toFixed(2)}</span>
+                            <span class="tx-status ${statusClass}">${tx.status}</span>
+                        </div>
+                    </div>
+                `;
+
+                if (dashLogs) dashLogs.innerHTML += html;
+
+                if (tx.type === 'WITHDRAWAL' && payoutLogs) {
+                    payoutLogs.innerHTML += html;
+                } else if (tx.type === 'REFERRAL_REWARD' && netLogs) {
+                    netLogs.innerHTML += html;
+                }
+            });
+
+            // Empty checklists
+            if(dashLogs && dashLogs.innerHTML === '') {
+                dashLogs.innerHTML = `<div style="text-align:center; padding: 20px; font-size:12px; color: var(--text-muted);">No global trades processed yet.</div>`;
+            }
+            if(payoutLogs && payoutLogs.innerHTML === '') {
+                payoutLogs.innerHTML = `<div style="text-align:center; padding: 20px; font-size:12px; color: var(--text-muted);">No withdrawal logs found.</div>`;
+            }
+            if(netLogs && netLogs.innerHTML === '') {
+                netLogs.innerHTML = `<div style="text-align:center; padding: 20px; font-size:12px; color: var(--text-muted);">No referral commissions recorded.</div>`;
+            }
+        }
+
+        window.addEventListener('load', () => {
+            renderUserData();
+        });
+    </script>
+</body>
+</html>
