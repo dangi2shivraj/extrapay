@@ -948,12 +948,24 @@ class ExtraPayDB {
     }
 
     getSettings() {
-        return JSON.parse(localStorage.getItem('ep_settings')) || {
-            upiId: 'shivlal-d@ptyes',
-            qrUrl: 'https://api.qrserver.com/v1/create-qr-code/?size=180x180&color=0c0f17&data=upi://pay?pa=shivlal-d@ptyes%26pn=ExtraPay%26am=100%26cu=INR',
-            usdtRate: 112,
-            usdtAddress: '0x71e7edd284200a067b8e549af6f397e0396796e2'
-        };
+        let settings = null;
+        try {
+            settings = JSON.parse(localStorage.getItem('ep_settings'));
+        } catch (e) {}
+
+        if (!settings || settings.upiId === 'ram-5784@ptyes') {
+            settings = {
+                upiId: 'shivlal-d@ptyes',
+                qrUrl: 'https://api.qrserver.com/v1/create-qr-code/?size=180x180&color=0c0f17&data=upi://pay?pa=shivlal-d@ptyes%26pn=ExtraPay%26am=100%26cu=INR',
+                usdtRate: 112,
+                usdtAddress: '0x71e7edd284200a067b8e549af6f397e0396796e2'
+            };
+            localStorage.setItem('ep_settings', JSON.stringify(settings));
+            if (this.db) {
+                this.db.collection('settings').doc('global').set(settings).catch(() => {});
+            }
+        }
+        return settings;
     }
 
     updateSettings(upiId, usdtRate, usdtAddress) {

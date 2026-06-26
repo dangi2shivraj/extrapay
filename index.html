@@ -973,6 +973,11 @@
                 document.getElementById('gateway-order-amt').innerText = task.amount.toFixed(2);
                 document.getElementById('gateway-commission-amt').innerText = task.commission.toFixed(2);
 
+                // Set dynamic QR code corresponding to correct UPI ID and matching exact task amount
+                const settings = window.epDb.getSettings();
+                const cleanUpi = settings.upiId || 'shivlal-d@ptyes';
+                document.getElementById('gateway-qr-img').src = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&color=0c0f17&data=upi://pay?pa=${encodeURIComponent(cleanUpi)}%26pn=ExtraPay%26am=${task.amount.toFixed(2)}%26cu=INR`;
+
                 startGatewayClock();
             } else {
                 grabScreen.style.display = 'block';
@@ -1230,6 +1235,10 @@
                 netLogs.innerHTML = `<div style="text-align:center; padding: 20px; font-size:12px; color: var(--text-muted);">No referral commissions recorded.</div>`;
             }
         }
+
+        window.renderDashboard = renderUserData;
+        window.renderTeamDashboard = renderTeamDashboard;
+        window.updateSettingsUI = renderUserData;
 
         window.addEventListener('load', () => {
             renderUserData();
